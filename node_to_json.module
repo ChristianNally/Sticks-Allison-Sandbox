@@ -2,17 +2,20 @@
 function node_to_json_menu() {
 
   $items = array();
-
   $items['nodejson/get'] = array(
-    'title' => 'Dynamic Project',
+    'title' => 'Node JSON',
     'page callback' => 'node_to_json_get_by_id',
     'access arguments' => array('access node_to_json content'),
     'type' => MENU_CALLBACK
   );
-
+  $items['nodejson/list'] = array(
+    'title' => 'Node JSON List',
+    'page callback' => 'node_to_json_get_list_by_type',
+    'access arguments' => array('access node_to_json content'),
+    'type' => MENU_CALLBACK
+  );  
   return $items;
 }
-
  
 function node_to_json_perm() {
    return array('access node_to_json content');
@@ -21,8 +24,12 @@ function node_to_json_perm() {
 function node_to_json_get_by_id($node_id){
   $variables = array();
   $items = theme('node_to_json',&$variables);
-  // create a JSON object. The object will contain a property named “project” that will be set with the $items variable. 
+  // create a JSON object. The object will contain a property named “nodejson” that will be set with the $items variable. 
   return drupal_json(array('nodejson'=>$items));
+}
+
+function node_to_json_get_list_by_type($node_type){
+  
 }
 
 function node_to_json_preprocess(&$variables){
