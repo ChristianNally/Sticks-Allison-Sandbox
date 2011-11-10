@@ -1,0 +1,5 @@
+ ; $Id$
+name = "Node to JSON"
+description = "Returns a node as JSON by node id."
+core = 6.x
+package = Ajax Modules
