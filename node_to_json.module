@@ -8,12 +8,13 @@ function node_to_json_menu() {
     'access arguments' => array('access node_to_json content'),
     'type' => MENU_CALLBACK
   );
-  $items['nodejson/list'] = array(
+  $items['nodejson/list/%'] = array(
     'title' => 'Node JSON List',
     'page callback' => 'node_to_json_get_list_by_type',
+    'page arguments' => array(2),
     'access arguments' => array('access node_to_json content'),
     'type' => MENU_CALLBACK
-  );  
+  );
   return $items;
 }
  
@@ -25,11 +26,25 @@ function node_to_json_get_by_id($node_id){
   $variables = array();
   $items = theme('node_to_json',&$variables);
   // create a JSON object. The object will contain a property named “nodejson” that will be set with the $items variable. 
-  return drupal_json(array('nodejson'=>$items));
+  return drupal_json(array('nodejson'=>$items)); // this sets the response header for javascript output
 }
 
-function node_to_json_get_list_by_type($node_type){
-  
+function node_to_json_get_list_by_type($node_type = 'project'){
+  $output = array();
+  $variables = array();
+  $types = node_get_types('names');
+  if ( !isset($types[$node_type]) ){ //using this rather than array_key_exists for speed reasons
+    return drupal_json('Illegal Link. Content Type does not exist.');
+  }
+  $result = db_query("SELECT nid FROM node WHERE type = '%s' ", $node_type);
+  $nids = array();
+  while ($obj = db_fetch_object ($result)) {
+    $node = node_load($obj->nid);
+//    $output .= '<h1>'.$node->title.'</h1>';
+    $variables = array(); // could be set here to add values available in template
+    $output[] = theme('node_to_json',&$variables);
+  }
+  return drupal_json(array('nodejson'=>$output));
 }
 
 function node_to_json_preprocess(&$variables){
@@ -138,5 +153,3 @@ function endsWith($haystack,$needle,$case=true) {
     if($case){return (strcmp(substr($haystack, strlen($haystack) - strlen($needle)),$needle)===0);}
     return (strcasecmp(substr($haystack, strlen($haystack) - strlen($needle)),$needle)===0);
 }
-
-?>
