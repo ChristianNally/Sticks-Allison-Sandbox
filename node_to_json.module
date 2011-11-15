@@ -22,104 +22,39 @@ function node_to_json_perm() {
    return array('access node_to_json content');
 }
 
+function _node_to_json_prepare_variables_for(&$variables,$node_id){
+  $node = node_load($node_id);
+  $variables['nid']=$node->nid;
+  $variables['title']=$node->title;
+  $variables['body'] = $node->body;
+}
+
 function node_to_json_get_by_id($node_id){
   $variables = array();
-  $items = theme('node_to_json',&$variables);
+  _node_to_json_prepare_variables_for($variables,$node_id);
+  $items = theme('node_to_json',$variables);
   // create a JSON object. The object will contain a property named “nodejson” that will be set with the $items variable. 
   return drupal_json(array('nodejson'=>$items)); // this sets the response header for javascript output
 }
 
 function node_to_json_get_list_by_type($node_type = 'project'){
   $output = array();
-  $variables = array();
   $types = node_get_types('names');
   if ( !isset($types[$node_type]) ){ //using this rather than array_key_exists for speed reasons
     return drupal_json('Illegal Link. Content Type does not exist.');
   }
   $result = db_query("SELECT nid FROM node WHERE type = '%s' ", $node_type);
-  $nids = array();
   while ($obj = db_fetch_object ($result)) {
-    $node = node_load($obj->nid);
-//    $output .= '<h1>'.$node->title.'</h1>';
-    $variables = array(); // could be set here to add values available in template
-    $output[] = theme('node_to_json',&$variables);
+    $variables = array();
+    _node_to_json_prepare_variables_for($variables,$obj->nid);
+    $output[] = theme('node_to_json',$variables);
   }
-  return drupal_json(array('nodejson'=>$output));
+  return drupal_json(array('nodejson'=>$output)); // this sets the request header for JSON output
 }
 
-function node_to_json_preprocess(&$variables){
-//	$content = '<div class="inner">
-//	<div class="field-thumbs">'.$imgs.'</div>
-//	<h2 class="title">'.$project_node->title.'</h2>
-//	<div class="field-date-completed">'.$date_completed.'</div>
-//	<div class="taxonomy-field-jobs">'.$taxonomy.'</div>
-//	<div class="field-project-link">'.$project_link.'</div>
-//	<div class="body">'.$project_node->body.'<div class="close"><a href="#"><strong>close</strong></a></div></div>
-//	</div>';
-//	$items = $content;
-  
-  $items = '';
-  $node = node_load($node_id);
-  $node = (object)$node; 
-  $variables['title'] = $node->title;
-  $variables['body'] = $node->body;
-    
-  if ($node->field_project_date[0]['value'] != null && $node->field_project_date[0]['value'] != ""){
-    $raw_date = explode("-",$node->field_project_date[0]['value']);
-    $variables['date_completed'] = date('F', mktime(0,0,0,$raw_date[1],1)) . ", " . $raw_date[0];
-  }
-
-  $taxonomy = "<h1>Taxonomy</h1>";
-  if ($node->taxonomy != null){
-    foreach ($node->taxonomy as $cat){
-      if ($cat->vid == 3){
-        if ($taxonomy != ""){
-          $taxonomy .= ", ";
-        }
-        $taxonomy .= $cat->name;
-      }
-    }
-  }
-  $variables['taxonomy'] = $taxonomy;
-
-  $project_link = "<h1>Project Link</h1>";
-  if ($node->field_project_link != null){
-    $protocol = "http://";
-    $protocol_ssl = "https://";
-    $sub = "www.";
-    $project_link_trimmed = $node->field_project_link[0]['url'];
-    // remove the http
-    if (startsWith($node->field_project_link[0]['url'], $protocol)){
-      $project_link_trimmed = substr($node->field_project_link[0]['url'], strlen($protocol));
-    }
-    // remove the https
-    if (startsWith($node->field_project_link[0]['url'], $protocol_ssl)){
-      $project_link_trimmed = substr($node->field_project_link[0]['url'], strlen($protocol_ssl));
-    }
-    // remove the www
-    if (startsWith($project_link_trimmed, $sub)){
-      $project_link_trimmed = substr($project_link_trimmed, strlen($sub));
-    }
-    // remove the last slash
-    if (endsWith($project_link_trimmed, "/")){
-      $project_link_trimmed = substr($project_link_trimmed,0,strlen($project_link_trimmed)-1);
-    }
-    $project_link .= '<a href="'.$node->field_project_link[0]['url'].'" target="_blank">'.$project_link_trimmed.'</a>';
-    $variables['project_link'] = $project_link;
-  }
-
-  $imgs = "<h1>Images</h1>";
-  $firstimg = true;
-  if (isset($node->field_project_images)){
-    foreach($node->field_project_images as $img) {
-      if ($firstimg) {
-        $firstimg = false;
-        continue;
-      };
-      $imgs .= '<img src="/'.imagecache_create_path('project_thumb', $img['filepath']).'" />';
-    }
-  }
-  $variables['imgs'] = $imgs;
+function node_to_json_preprocess(&$variables,$hook){
+  // module maintainers: add $variables based on $variables['nid'] here.
+  // module users: implement THEME_preprocess_node_to_json(&$variables) in your theme's template.php
 }
 
 function node_to_json_theme($existing, $type, $theme, $path) {
