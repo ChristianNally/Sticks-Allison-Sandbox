@@ -2,7 +2,7 @@
 function node_to_json_menu() {
 
   $items = array();
-  $items['nodejson/get'] = array(
+  $items['nodejson/get/%'] = array(
     'title' => 'Node JSON',
     'page callback' => 'node_to_json_get_by_id',
     'access arguments' => array('access node_to_json content'),
@@ -22,17 +22,19 @@ function node_to_json_perm() {
    return array('access node_to_json content');
 }
 
-function _node_to_json_prepare_variables_for(&$variables,$node_id){
-  $node = node_load($node_id);
-  $variables['nid']=$node->nid;
-  $variables['title']=$node->title;
-  $variables['body'] = $node->body;
+function template_preprocess_nodejson(&$variables){
+  // TODO: method for bringing in argument via menu hook
+  // TODO: add more explicit validation of $node
+  if (is_numeric(arg(2))){
+    $node = node_load(arg(2));
+    $variables['nid']=$node->nid;
+    $variables['title']=$node->title;
+    $variables['body'] = $node->body;
+  }
 }
 
-function node_to_json_get_by_id($node_id){
-  $variables = array();
-  _node_to_json_prepare_variables_for($variables,$node_id);
-  $items = theme('node_to_json',$variables);
+function node_to_json_get_by_id(){
+  $items = theme('nodejson');
   // create a JSON object. The object will contain a property named “nodejson” that will be set with the $items variable. 
   return drupal_json(array('nodejson'=>$items)); // this sets the response header for javascript output
 }
@@ -45,9 +47,8 @@ function node_to_json_get_list_by_type($node_type = 'project'){
   }
   $result = db_query("SELECT nid FROM node WHERE type = '%s' ", $node_type);
   while ($obj = db_fetch_object ($result)) {
-    $variables = array();
-    _node_to_json_prepare_variables_for($variables,$obj->nid);
-    $output[] = theme('node_to_json',$variables);
+//    _node_to_json_prepare_variables_for($variables,$obj->nid);
+    $output[] = theme('nodejson',$node_id);
   }
   return drupal_json(array('nodejson'=>$output)); // this sets the request header for JSON output
 }
@@ -63,9 +64,9 @@ function node_to_json_theme($existing, $type, $theme, $path) {
          'arguments' => array(),
       ),
    );
-  $hooks['node_to_json'] = array(
-      'path' => 'sites/all/themes/abx/',
-      'template' => 'dynamic-project',
+  $hooks['nodejson'] = array(
+      'variables' => array('nid'=>1),
+      'template' => 'nodejson',
       'arguments'  => array(),
     );
   return $hooks;
