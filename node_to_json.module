@@ -45,11 +45,13 @@ function node_to_json_get_list_by_type($node_type = 'project'){
   if ( !isset($types[$node_type]) ){ //using this rather than array_key_exists for speed reasons
     return drupal_json('Illegal Link. Content Type does not exist.');
   }
+  $output[] = '<div class="list type-'.$node_type.'">';
   $result = db_query("SELECT nid FROM node WHERE type = '%s' ", $node_type);
   while ($obj = db_fetch_object ($result)) {
 //    _node_to_json_prepare_variables_for($variables,$obj->nid);
     $output[] = theme('nodejson',$node_id);
   }
+  $output[] = '</div>';
   return drupal_json(array('nodejson'=>$output)); // this sets the request header for JSON output
 }
 
