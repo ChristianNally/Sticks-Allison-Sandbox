@@ -25,11 +25,17 @@ function node_to_json_perm() {
 function template_preprocess_nodejson(&$variables){
   // TODO: method for bringing in argument via menu hook
   // TODO: add more explicit validation of $node
+  // add additional suggestions for the TPL file
+  $variables['template_files'] = array();
+  $variables['template_files'][] = 'nodejson';
   if (is_numeric(arg(2))){
     $node = node_load(arg(2));
     $variables['nid']=$node->nid;
     $variables['title']=$node->title;
     $variables['body'] = $node->body;
+    $variables['template_files'][] = 'nodejson-'.$node->type;
+  } else {
+    $variables['template_files'][] = 'nodejson-'.arg(2);
   }
 }
 
