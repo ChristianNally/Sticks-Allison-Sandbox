@@ -5,6 +5,7 @@ function node_to_json_menu() {
   $items['nodejson/get/%'] = array(
     'title' => 'Node JSON',
     'page callback' => 'node_to_json_get_by_id',
+    'page arguments' => array(2),
     'access arguments' => array('access node_to_json content'),
     'type' => MENU_CALLBACK
   );
@@ -23,29 +24,47 @@ function node_to_json_perm() {
 }
 
 function template_preprocess_nodejson(&$variables){
+//  echo '<li>';
+//  echo $variables['nid'];
+//  echo '</li>';
+//  exit(0);
+
+  $node = node_load($variables['nid']);
+  $variables['title']=$node->title;
+  $variables['body'] = $node->body;
+  $variables['template_files'][] = 'nodejson-'.$node->type;
+  
   // TODO: method for bringing in argument via menu hook
   // TODO: add more explicit validation of $node
   // add additional suggestions for the TPL file
-  $variables['template_files'] = array();
-  $variables['template_files'][] = 'nodejson';
-  if (is_numeric(arg(2))){
-    $node = node_load(arg(2));
-    $variables['nid']=$node->nid;
-    $variables['title']=$node->title;
-    $variables['body'] = $node->body;
-    $variables['template_files'][] = 'nodejson-'.$node->type;
-  } else {
-    $variables['template_files'][] = 'nodejson-'.arg(2);
-  }
+//  $variables['template_files'] = array();
+//  $variables['template_files'][] = 'nodejson';
+//  if (is_numeric(arg(2))){
+//    $node = node_load($variables['nid']);
+//    $variables['nid']=$node->nid;
+//    $variables['title']=$node->title;
+//    $variables['body'] = $node->body;
+//    $variables['template_files'][] = 'nodejson-'.$node->type;
+//  } else {
+//    $variables['template_files'][] = 'nodejson-'.arg(2);
+//  }
 }
 
-function node_to_json_get_by_id(){
-  $items = theme('nodejson');
+function node_to_json_get_by_id($nid){
+//    echo '<pre>';
+//    echo $nid;
+//    echo '</pre>';
+//    exit(0);
+  $items = theme('nodejson',arg(2));
   // create a JSON object. The object will contain a property named “nodejson” that will be set with the $items variable. 
   return drupal_json(array('nodejson'=>$items)); // this sets the response header for javascript output
 }
 
 function node_to_json_get_list_by_type($node_type = 'project'){
+//    echo '<pre>';
+//    print_r($node_type);
+//    echo '</pre>';
+//    exit(0);
   $output = array();
   $types = node_get_types('names');
   if ( !isset($types[$node_type]) ){ //using this rather than array_key_exists for speed reasons
@@ -55,7 +74,11 @@ function node_to_json_get_list_by_type($node_type = 'project'){
   $result = db_query("SELECT nid FROM node WHERE type = '%s' ", $node_type);
   while ($obj = db_fetch_object ($result)) {
 //    _node_to_json_prepare_variables_for($variables,$obj->nid);
-    $output[] = theme('nodejson',$node_id);
+//    echo '<pre>';
+//    print_r($obj);
+//    echo '</pre>';
+//    exit(0);
+    $output[] = theme('nodejson',$obj->nid);
   }
   $output[] = '</div>';
   return drupal_json(array('nodejson'=>$output)); // this sets the request header for JSON output
@@ -75,8 +98,8 @@ function node_to_json_theme($existing, $type, $theme, $path) {
   $hooks['nodejson'] = array(
       'variables' => array('nid'=>1),
       'template' => 'nodejson',
-      'arguments'  => array(),
-    );
+      'arguments' => array('nid' => NULL),
+  );
   return $hooks;
 }
 
